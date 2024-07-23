@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Escape Room Designer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .puzzle {
+            transition: all 0.3s ease;
+        }
+        .puzzle:hover {
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .hint input {
+            transition: all 0.3s ease;
+        }
+        .hint input:focus {
+            box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.5);
+        }
+    </style>
+</head>
+<body class="bg-gray-100 p-8">
+    <div id="loginForm" class="max-w-md mx-auto bg-white p-6 rounded shadow-md mb-8">
+        <h2 class="text-2xl font-bold mb-6">Login / Create Puzzle Set</h2>
+        <form id="loginFormElement" class="space-y-4">
+            <div>
+                <label class="block mb-2">Agent Name:</label>
+                <input type="text" id="agentName" class="w-full p-2 border rounded" required>
+            </div>
+            <div>
+                <label class="block mb-2">Secret Key:</label>
+                <input type="password" id="secretKey" class="w-full p-2 border rounded" required>
+            </div>
+            <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition duration-300">Access Puzzle Set</button>
+        </form>
+    </div>
+
+    <div id="puzzleDesigner" class="max-w-3xl mx-auto bg-white p-6 rounded shadow-md" style="display: none;">
+        <h1 class="text-2xl font-bold mb-6">Escape Room Designer</h1>
+        
+        <form id="escapeRoomForm" class="space-y-6">
+            <div id="puzzles" class="space-y-6">
+                <!-- Puzzle template -->
+                <div class="puzzle border-2 border-gray-300 p-4 rounded-lg">
+                    <h2 class="text-xl font-semibold mb-4">Puzzle <span class="puzzle-number">1</span></h2>
+                    <div class="mb-4">
+                        <label class="block mb-2">Description:</label>
+                        <textarea class="w-full p-2 border rounded" rows="3" name="puzzleDescription" required></textarea>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block mb-2">Solution:</label>
+                        <input type="text" class="w-full p-2 border rounded" name="puzzleSolution" required>
+                    </div>
+                    <div class="hints mb-4 bg-gray-50 p-4 rounded">
+                        <h3 class="text-lg font-semibold mb-2">Hints:</h3>
+                        <div class="hint mb-2">
+                            <input type="text" class="w-full p-2 border rounded" name="puzzleHint" placeholder="Enter a hint">
+                        </div>
+                    </div>
+                    <button type="button" class="add-hint bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition duration-300">Add Hint</button>
+                </div>
+            </div>
+            
+            <button type="button" id="addPuzzle" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition duration-300">Add Another Puzzle</button>
+            
+            <button type="submit" class="bg-indigo-500 text-white px-4 py-2 rounded hover:bg-indigo-600 transition duration-300">Save Escape Room Design</button>
+        </form>
+    </div>
+
+    <script>
+        let currentAgentName = '';
+        let currentSecretKey = '';
+
+        document.getElementById('loginFormElement').addEventListener('submit', function(e) {
+            e.preventDefault();
+            currentAgentName = document.getElementById('agentName').value;
+            currentSecretKey = document.getElementById('secretKey').value;
+            fetch('/escaperoom/api/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    agentName: currentAgentName,
+                    secretKey: currentSecretKey,
+                }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Login successful:', data);
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+            });
+            
+            // Here you would typically verify the agent name and secret key with your backend
+            // For this example, we'll just show the puzzle designer
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('puzzleDesigner').style.display = 'block';
+
+            // You might want to load existing puzzles here based on the agent name and secret key
+        });
+
+        document.getElementById('addPuzzle').addEventListener('click', function() {
+            const puzzles = document.getElementById('puzzles');
+            const newPuzzle = puzzles.children[0].cloneNode(true);
+            const puzzleNumber = puzzles.children.length + 1;
+            newPuzzle.querySelector('.puzzle-number').textContent = puzzleNumber;
+            newPuzzle.querySelectorAll('input, textarea').forEach(input => input.value = '');
+            newPuzzle.querySelector('.hints').innerHTML = `
+                <h3 class="text-lg font-semibold mb-2">Hints:</h3>
+                <div class="hint mb-2">
+                    <input type="text" class="w-full p-2 border rounded" name="puzzleHint" placeholder="Enter a hint">
+                </div>
+            `;
+            puzzles.appendChild(newPuzzle);
+        });
+
+        document.getElementById('puzzles').addEventListener('click', function(e) {
+            if (e.target.classList.contains('add-hint')) {
+                const hintsContainer = e.target.previousElementSibling;
+                const newHint = document.createElement('div');
+                newHint.className = 'hint mb-2';
+                newHint.innerHTML = `<input type="text" class="w-full p-2 border rounded" name="puzzleHint" placeholder="Enter a hint">`;
+                hintsContainer.appendChild(newHint);
+            }
+        });
+
+        document.getElementById('escapeRoomForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const puzzles = document.querySelectorAll('.puzzle');
+            const escapeRoomData = {
+                agentName: currentAgentName,
+                puzzles: Array.from(puzzles).map((puzzle, index) => {
+                    return {
+                        number: index + 1,
+                        description: puzzle.querySelector('[name="puzzleDescription"]').value,
+                        solution: puzzle.querySelector('[name="puzzleSolution"]').value,
+                        hints: Array.from(puzzle.querySelectorAll('[name="puzzleHint"]'))
+                                    .map(hint => hint.value)
+                                    .filter(hint => hint.trim() !== '')
+                    };
+                })
+            };
+
+            const jsonData = JSON.stringify(escapeRoomData, null, 2);
+            console.log('Escape Room Data:', jsonData);
+
+            // Here you would typically send the jsonData to your backend service
+            // along with the currentSecretKey for authentication
+            // For example:
+            // fetch('/api/save-escape-room', {
+            //     method: 'POST',
+            //     headers: {
+            //         'Content-Type': 'application/json',
+            //         'Authorization': `Bearer ${currentSecretKey}`
+            //     },
+            //     body: jsonData
+            // })
+            // .then(response => response.json())
+            // .then(data => console.log('Success:', data))
+            // .catch((error) => console.error('Error:', error));
+
+            alert('Escape room design saved!');
+        });
+    </script>
+</body>
+</html>
