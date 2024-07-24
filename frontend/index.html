@@ -70,20 +70,20 @@
 
     <script>
         let currentAgentName = '';
-        let currentSecretKey = '';
+        let password = '';
 
         document.getElementById('loginFormElement').addEventListener('submit', function(e) {
             e.preventDefault();
             currentAgentName = document.getElementById('agentName').value;
-            currentSecretKey = document.getElementById('secretKey').value;
-            fetch('/escaperoom/api/login', {
+            password = document.getElementById('secretKey').value;
+            fetch('/escaperoom/createOrLoadEscapeRoom', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
                     agentName: currentAgentName,
-                    secretKey: currentSecretKey,
+                    password: password,
                 }),
             })
             .then(response => response.json())

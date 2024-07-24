@@ -12,7 +12,11 @@ async function getRedisClient() {
     return redisClient;
 }
 
-async function createOrLoadEscapeRoom(agentName, password) {
+export async function createOrLoadEscapeRoom(agentName, password) {
+    if (!agentName || !password) {
+        return { success: false, message: 'Agent name and password are required.' };
+    }
+
     const client = await getRedisClient();
     const secretKey = generateSecretKey(password);
     const agentExists = await client.exists(`escaperooms/${agentName}/`);
@@ -33,7 +37,7 @@ async function createOrLoadEscapeRoom(agentName, password) {
     }
 }
 
-async function saveEscapeRoom(agentName, password, roomData) {
+export async function saveEscapeRoom(agentName, password, roomData) {
     const client = await getRedisClient();
 
     const secretKey = generateSecretKey(password);

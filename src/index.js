@@ -7,9 +7,12 @@ dotenv.config();
 const app = express();
 const port = process.env.PORT || 3000;
 
+const basePath = process.env.BASE_PATH || ''
 app.use(express.json());
 
-app.post('/createOrLoadEscapeRoom', async (req, res) => {
+const escapeRoomRouter = express.Router();
+
+escapeRoomRouter.post('/createOrLoadEscapeRoom', async (req, res) => {
     try {
         const { agentName, password } = req.body;
         const result = await createOrLoadEscapeRoom(agentName, password);
@@ -19,7 +22,7 @@ app.post('/createOrLoadEscapeRoom', async (req, res) => {
     }
 });
 
-app.post('/saveEscapeRoom', async (req, res) => {
+escapeRoomRouter.post('/saveEscapeRoom', async (req, res) => {
     try {
         const { agentName, password, roomData } = req.body;
         const result = await saveEscapeRoom(agentName, password, roomData);
@@ -28,6 +31,9 @@ app.post('/saveEscapeRoom', async (req, res) => {
         res.status(500).json({ success: false, message: error.message });
     }
 });
+
+app.use(basePath, escapeRoomRouter);
+
 
 app.listen(port, () => {
     console.log(`Server running on port ${port}`);
