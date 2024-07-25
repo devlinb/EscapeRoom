@@ -1,6 +1,13 @@
 import * as dotenv from 'dotenv';
 import express from 'express';
-import { createOrLoadEscapeRoom, saveEscapeRoom } from './escapeRoomRoutes.js';
+import path from 'path';
+import { createOrLoadEscapeRoom, saveEscapeRoom, getAgentPuzzle } from './escapeRoomRoutes.js';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+// Calculate __dirname equivalent in ES module
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 dotenv.config();
 
@@ -9,6 +16,9 @@ const port = process.env.PORT || 3000;
 
 const basePath = process.env.BASE_PATH || ''
 app.use(express.json());
+
+// Serve static files from the frontend directory
+app.use(express.static(path.join(__dirname, '../frontend')));
 
 const escapeRoomRouter = express.Router();
 
@@ -32,8 +42,18 @@ escapeRoomRouter.post('/saveEscapeRoom', async (req, res) => {
     }
 });
 
-app.use(basePath, escapeRoomRouter);
+// Dynamic GET endpoint for agent puzzles
+escapeRoomRouter.get('/:agentName/:puzzleId', async (req, res) => {
+    try {
+        const { agentName, puzzleId } = req.params;
+        const result = await getAgentPuzzle(agentName, puzzleId);
+        res.json(result);
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
 
+app.use(basePath, escapeRoomRouter);
 
 app.listen(port, () => {
     console.log(`Server running on port ${port}`);
