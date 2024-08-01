@@ -46,6 +46,8 @@ export async function createOrLoadEscapeRoom(agentName, password) {
     }
 }
 
+
+
 export async function saveEscapeRoom(agentName, password, roomData) {
     const client = await getRedisClient();
 
@@ -69,12 +71,13 @@ export async function getAgentPuzzle(agentName, puzzleNumber) {
     try {
         // Fetch a specific puzzle using JSONPath query syntax
         const puzzlePath = `$[${puzzleNumber-1}]`; // Adjusted line
-        const puzzle = await client.json.get(`escaperooms/${agentName}/room/`, {
+        const puzzle = (await client.json.get(`escaperooms/${agentName}/room/`, {
             path: puzzlePath
-        });
+        }))[0];
         if (!puzzle || puzzle.length === 0) {
             return { success: false, message: 'Puzzle does not exist.' };
         }
+        delete puzzle?.solution;
         return { success: true, puzzle, message: 'Puzzle retrieved successfully.' };
     } catch (error) {
         console.error(`Error retrieving puzzle: ${error.message}`);
