@@ -12,10 +12,22 @@ async function getRedisClient() {
     return redisClient;
 }
 
+function validateAgentName(agentName) {
+    const isValid = /^[a-zA-Z0-9 ]{1,20}$/.test(agentName);
+    if (!isValid) {
+        throw new Error('Invalid agent name.');
+    }
+}
+
 export async function createOrLoadEscapeRoom(agentName, password) {
     if (!agentName || !password) {
         return { success: false, message: 'Agent name and password are required.' };
     }
+
+    if (!validateAgentName(agentName)) {
+        return { success: false, message: "Invalid agent name"}
+    }
+
     const client = await getRedisClient();
     const secretKey = generateSecretKey(password);
     const storedSecretKey = await client.get(`escaperooms/${agentName}/:secretKey`);

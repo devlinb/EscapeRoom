@@ -78,6 +78,11 @@
             e.preventDefault();
             currentAgentName = document.getElementById('agentName').value;
             password = document.getElementById('secretKey').value;
+            const isValid = /^[a-zA-Z0-9]{1,20}$/.test(currentAgentName);
+            if (!isValid) {
+                alert('Agent Name must be alphanumeric and up to 20 characters long.');
+                return; // Stop the form submission
+            }
             fetch('/escaperoom/createOrLoadEscapeRoom', {
                 method: 'POST',
                 headers: {
