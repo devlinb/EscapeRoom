@@ -14,9 +14,7 @@ async function getRedisClient() {
 
 function validateAgentName(agentName) {
     const isValid = /^[a-zA-Z0-9 ]{1,20}$/.test(agentName);
-    if (!isValid) {
-        throw new Error('Invalid agent name.');
-    }
+    return isValid;
 }
 
 export async function createOrLoadEscapeRoom(agentName, password) {
@@ -30,8 +28,9 @@ export async function createOrLoadEscapeRoom(agentName, password) {
 
     const client = await getRedisClient();
     const secretKey = generateSecretKey(password);
+    
     const storedSecretKey = await client.get(`escaperooms/${agentName}/:secretKey`);
-
+    
     if (!storedSecretKey) {
         // If the agent does not exist, create a new agent and escape room
         await client.set(`escaperooms/${agentName}/:secretKey`, secretKey);
