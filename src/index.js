@@ -1,7 +1,7 @@
 import * as dotenv from 'dotenv';
 import express from 'express';
 import path from 'path';
-import { createOrLoadEscapeRoom, saveEscapeRoom, getAgentPuzzle } from './escapeRoomRoutes.js';
+import { createOrLoadEscapeRoom, saveEscapeRoom, getAgentPuzzle, checkSolutionForPuzzle } from './escapeRoomRoutes.js';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 
@@ -52,6 +52,17 @@ escapeRoomRouter.get('/:agentName/:puzzleId', async (req, res) => {
         res.status(500).json({ success: false, message: error.message });
     }
 });
+
+escapeRoomRouter.post('/checkSolution', async (req, res) => {
+    try {
+        const { agentName, puzzleId, guess } = req.body;
+        const result = await checkSolutionForPuzzle(agentName, puzzleId, guess);
+        res.json(result);
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
 
 app.use(basePath, escapeRoomRouter);
 

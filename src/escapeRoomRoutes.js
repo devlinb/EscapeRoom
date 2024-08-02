@@ -1,5 +1,7 @@
 import { createClient } from 'redis';
 import { generateSecretKey } from './generateSecretKey.js';
+import { wordsToNumbers } from 'words-to-numbers';
+
 
 // Singleton Redis client
 let redisClient;
@@ -62,6 +64,8 @@ export async function saveEscapeRoom(agentName, password, roomData) {
     }
 }
 
+
+
 export async function getAgentPuzzle(agentName, puzzleNumber) {
     if (!agentName || puzzleNumber == null || isNaN(Number(puzzleNumber))) { // Ensure puzzleNumber is a number
         return { success: false, message: 'Agent name and puzzle number are required.' };
@@ -82,5 +86,51 @@ export async function getAgentPuzzle(agentName, puzzleNumber) {
     } catch (error) {
         console.error(`Error retrieving puzzle: ${error.message}`);
         return { success: false, message: `Error retrieving puzzle: ${error.message}` };
+    }
+}
+
+export async function checkSolutionForPuzzle(agentName, puzzleNumber, guess) {
+    if (!agentName || puzzleNumber == null || isNaN(Number(puzzleNumber)) || !guess) { // Ensure puzzleNumber is a number and guess is not empty
+        return { success: false, message: 'Agent name, puzzle number, and guess are required.' };
+    }
+    console.log(`inside checkSolutionForPuzzle for agent: ${agentName}, puzzle number: ${puzzleNumber}, and guess: ${guess}`);
+    const client = await getRedisClient();
+    try {
+        // Fetch a specific puzzle using JSONPath query syntax
+        const puzzlePath = `$[${puzzleNumber-1}]`; // Adjusted line
+        const puzzle = (await client.json.get(`escaperooms/${agentName}/room/`, {
+            path: puzzlePath
+        }))[0];
+        if (!puzzle || puzzle.length === 0) {
+            return { success: false, message: 'Puzzle does not exist.' };
+        }
+        let solution = puzzle.solution;
+        // Check if solution is an integer
+        if (typeof solution === 'number') {
+            let guessNumber = parseInt(guess);
+            if (isNaN(guessNumber)) {
+                guessNumber = wordsToNumbers(guess);
+            }
+            if (guessNumber === solution) {
+                return { success: true, message: 'Correct solution.' };
+            }
+        } else {
+            // First check for identical matches including spaces and case sensitivity
+            if (guess === solution) {
+                return { success: true, message: 'Correct solution.' };
+            }
+            // Then remove all spaces, convert everything to lowercase, then do a string compare
+            else if (guess.replace(/\s+/g, '').toLowerCase() === solution.replace(/\s+/g, '').toLowerCase()) {
+                return { success: true, message: 'Correct solution.' };
+            }
+            // Finally, consider a guess correct if it matches the solution with punctuation stripped off the end
+            else if (guess.replace(/[^\w\s]|_$/g, '').toLowerCase() === solution.replace(/[^\w\s]|_$/g, '').toLowerCase()) {
+                return { success: true, message: 'Correct solution.' };
+            }
+        }
+        return { success: false, message: 'Incorrect solution.' };
+    } catch (error) {
+        console.error(`Error checking solution: ${error.message}`);
+        return { success: false, message: `Error checking solution: ${error.message}` };
     }
 }
