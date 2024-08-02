@@ -108,7 +108,7 @@ export async function checkSolutionForPuzzle(agentName, puzzleNumber, guess) {
         // Check if solution is an integer
         if (typeof solution === 'number') {
             let guessStripped = guess.replace(/[^\w\s]|_$/g, ''); // Strip punctuation from the end
-            let guessNumber = parseInt(guessStripped);
+            let guessNumber = Number(guessStripped);
             if (isNaN(guessNumber)) {
                 guessNumber = wordsToNumbers(guessStripped);
             }
