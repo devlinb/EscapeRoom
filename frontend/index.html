@@ -254,7 +254,7 @@
                 const solutionInput = puzzleElement.querySelector('input[name="puzzleSolution"]');
                 const postEndpointElement = document.createElement('p');
                 postEndpointElement.className = 'text-sm mb-4';
-                postEndpointElement.innerHTML = `Tool/Action POST endpoint: <code>${window.location.origin}/escaperoom/checkSolution {"agentName": "${currentAgentName}", "puzzle": ${puzzleNumber}, "guess": "..."}</code>`;
+                postEndpointElement.innerHTML = `<span class="font-semibold">Tool/Action POST endpoint: ${window.location.origin}/escaperoom/checkSolution </span> <code>{"agentName": "${currentAgentName}", "puzzle": ${puzzleNumber}, "guess": "..."}</code>`;
                 // Insert the postEndpointElement after the solution input field
                 solutionInput.parentNode.insertBefore(postEndpointElement, solutionInput.nextSibling);
                 
