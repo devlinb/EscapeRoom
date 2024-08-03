@@ -155,12 +155,11 @@
                             `;
                             puzzlesContainer.appendChild(puzzleElement);
                         });
-
-                        // Show the puzzle designer
-                        document.getElementById('loginForm').style.display = 'none';
-                        document.getElementById('site-description').style.display = 'none';
-                        document.getElementById('puzzleDesigner').style.display = 'block';
                     }
+                    // Show the puzzle designer
+                    document.getElementById('loginForm').style.display = 'none';
+                    document.getElementById('site-description').style.display = 'none';
+                    document.getElementById('puzzleDesigner').style.display = 'block';
                 })
                 .catch((error) => {
                     console.error('Error:', error);
