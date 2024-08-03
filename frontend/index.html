@@ -122,7 +122,6 @@
                 }
                 // Check if the data is a serialized room structure
                 if (data && data.roomData && data.success) {
-                    
                     // Deserialize the JSON room structure
                     const roomData = data.roomData;
                     const puzzlesContainer = document.getElementById('puzzles');
@@ -142,6 +141,7 @@
                         <div class="mb-4">
                             <label class="block mb-2">Solution:</label>
                             <input type="text" class="w-full p-2 border rounded" name="puzzleSolution" value="${puzzleData.solution}" required>
+                            <p class="text-sm mb-4"><span class="font-semibold">Tool/Action POST endpoint: ${window.location.origin}/escaperoom/checkSolution </span> <code>{"agentName": "${currentAgentName}", "puzzle": ${index + 1}, "guess": "..."}</code></p>
                         </div>
                         <div class="hints mb-4 bg-gray-50 p-4 rounded">
                             <h3 class="text-lg font-semibold mb-2">Hints:</h3>
@@ -160,6 +160,14 @@
                     document.getElementById('loginForm').style.display = 'none';
                     document.getElementById('site-description').style.display = 'none';
                     document.getElementById('puzzleDesigner').style.display = 'block';
+                    
+                    // Check if there are any puzzles loaded, if not, add the endpoint to the initial puzzle
+                    const puzzlesContainer = document.getElementById('puzzles');
+                    if (puzzlesContainer.children.length === 1) {
+                        // Assuming there's always at least one puzzle template present
+                        const firstPuzzle = puzzlesContainer.children[0];
+                        addEndpointElement(firstPuzzle, 1); // Add endpoint to the first puzzle
+                    }
                 })
                 .catch((error) => {
                     console.error('Error:', error);
@@ -172,6 +180,7 @@
                 const puzzleNumber = puzzles.children.length + 1;
                 newPuzzle.querySelector('.puzzle-number').textContent = puzzleNumber;
                 newPuzzle.querySelectorAll('input, textarea').forEach(input => input.value = '');
+
                 newPuzzle.querySelector('.hints').innerHTML = `
                 <h3 class="text-lg font-semibold mb-2">Hints:</h3>
                 <div class="hint mb-2">
@@ -228,6 +237,28 @@
                 
                 
             });
+
+            // Function to add the endpoint element
+            function addEndpointElement(puzzleElement, puzzleNumber) {
+                const endpointElement = document.createElement('h3');
+                endpointElement.className = 'text-sm font-semibold mb-4';
+                endpointElement.innerHTML = `Tool/Action GET endpoint: <a href="${window.location.origin}/escaperoom/${currentAgentName}/${puzzleNumber}" target="_blank">${window.location.origin}/escaperoom/${currentAgentName}/${puzzleNumber}</a>`;
+
+                // Find the puzzle title element (assuming it's the first h2 element inside the puzzleElement)
+                const titleElement = puzzleElement.querySelector('h2');
+
+                // Insert the endpointElement after the titleElement
+                titleElement.parentNode.insertBefore(endpointElement, titleElement.nextSibling);
+
+                // Add POST endpoint information after the solution input field
+                const solutionInput = puzzleElement.querySelector('input[name="puzzleSolution"]');
+                const postEndpointElement = document.createElement('p');
+                postEndpointElement.className = 'text-sm mb-4';
+                postEndpointElement.innerHTML = `Tool/Action POST endpoint: <code>${window.location.origin}/escaperoom/checkSolution {"agentName": "${currentAgentName}", "puzzle": ${puzzleNumber}, "guess": "..."}</code>`;
+                // Insert the postEndpointElement after the solution input field
+                solutionInput.parentNode.insertBefore(postEndpointElement, solutionInput.nextSibling);
+                
+            }
 
             document.getElementById('logout').addEventListener('click', () => {
                 document.getElementById('loginForm').style.display = 'block';
